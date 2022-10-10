@@ -91,6 +91,8 @@ public class GetJNIBenchmark {
 
         JMHCaller caller;
 
+        long mockHandle;
+
         @Setup
         public void setup() {
             this.caller = JMHCaller.fromStack();
@@ -100,6 +102,8 @@ public class GetJNIBenchmark {
             keyBytes = keyBase.getBytes();
 
             readChecksum = AllocationCache.Checksum.valueOf(checksum);
+
+            mockHandle = GetPutJNI.createMockHandle();
         }
 
         @TearDown
@@ -148,6 +152,7 @@ public class GetJNIBenchmark {
                 case "getIntoUnsafe":
                     unsafeBufferCache.setup(valueSize, cacheSize, benchmarkState.cacheEntryOverhead, benchmarkState.readChecksum, blackhole);
                     break;
+                case "getFromMockHandleIntoByteArraySetRegion":
                 case "getIntoByteArraySetRegion":
                 case "getIntoByteArrayGetElements":
                 case "getIntoByteArrayCritical":
@@ -181,6 +186,7 @@ public class GetJNIBenchmark {
                 case "getIntoUnsafe":
                     unsafeBufferCache.tearDown();
                     break;
+                case "getFromMockHandleIntoByteArraySetRegion":
                 case "getIntoByteArraySetRegion":
                 case "getIntoByteArrayGetElements":
                 case "getIntoByteArrayCritical":
@@ -235,6 +241,14 @@ public class GetJNIBenchmark {
         byteBuf.writerIndex(size);
         threadState.nettyByteBufCache.checksumBuffer(byteBuf);
         threadState.nettyByteBufCache.release(byteBuf);
+    }
+
+    @Benchmark
+    public void getFromMockHandleIntoByteArraySetRegion(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState, Blackhole blackhole) {
+        byte[] array = threadState.byteArrayCache.acquire();
+        int size = GetPutJNI.getFromMockHandleIntoByteArraySetRegion(benchmarkState.mockHandle, benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, array, benchmarkState.valueSize);
+        threadState.byteArrayCache.checksumBuffer(array);
+        threadState.byteArrayCache.release(array);
     }
 
     @Benchmark

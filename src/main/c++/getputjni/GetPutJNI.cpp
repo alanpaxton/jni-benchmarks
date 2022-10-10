@@ -31,16 +31,7 @@
 #include <iostream>
 
 #include "com_evolvedbinary_jnibench_common_getputjni_GetPutJNI.h"
-
-/*
- * Turn these into header and factor methods (at least) out from GetByteArray.cpp
- */
-extern const std::string &GetByteArrayInternal(const char *key);
-extern char *GetByteArrayInternalForWrite(const char *key, size_t len);
-
-extern jclass g_jbyte_buffer_clazz;
-extern jmethodID g_jbyte_buffer_array_mid;
-extern jmethodID g_jbyte_buffer_allocate_mid;
+#include "../bytearray/MockDB.h"
 
 //
 // Common shortcut code for reading the value from the "fake database"
@@ -125,7 +116,7 @@ jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_getIntoUnsafe(JN
   size_t get_size = std::min(static_cast<size_t>(jval_len), cvalue.size());
   memcpy(buffer_memory, cvalue.c_str(), get_size);
 
-  return get_size;
+  return static_cast<jint>(get_size);
 }
 
 /*
@@ -215,10 +206,47 @@ jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_putFromDirectByt
 
 /*
  * Class:     com_evolvedbinary_jnibench_common_getputjni_GetPutJNI
+ * Method:    createMockHandle
+ * Signature: ()J
+ */
+jlong Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_createMockHandle(JNIEnv *, jclass)
+{
+  auto* mockHandle = new MockDB();
+  mockHandle->mockReadCache = std::shared_ptr<MockReadCache>(GetMockReadCache());
+  return reinterpret_cast<jlong>(mockHandle);
+}
+
+/*
+ * Class:     com_evolvedbinary_jnibench_common_getputjni_GetPutJNI
+ * Method:    getFromMockHandleIntoByteArraySetRegion
+ * Signature: (J[BII[BI)I
+ */
+jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_getFromMockHandleIntoByteArraySetRegion(
+  JNIEnv *env, jclass, jlong jhandle, jbyteArray jkey, jint jkey_off, jint jkey_len, jbyteArray jval_byte_array, jint jval_len)
+{
+  const auto& mockAPIHandle = *reinterpret_cast<MockDB*>(jhandle);
+  const char *key = GetKey(env, jkey, jkey_off, jkey_len);
+  if (key == nullptr)
+  {
+    return kError;
+  }
+  std::string cvalue = GetByteArrayInternal(mockAPIHandle.mockReadCache.get(), key);
+  delete[] key;
+
+  size_t get_size = std::min(static_cast<size_t>(jval_len), cvalue.size());
+  env->SetByteArrayRegion(jval_byte_array, 0, static_cast<jsize>(get_size), const_cast<jbyte *>(reinterpret_cast<const jbyte *>(cvalue.c_str())));
+
+  return static_cast<jint>(get_size);
+}
+
+
+/*
+ * Class:     com_evolvedbinary_jnibench_common_getputjni_GetPutJNI
  * Method:    getIntoByteArraySetRegion
  * Signature: ([BII[BI)I
  */
-jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_getIntoByteArraySetRegion(JNIEnv *env, jclass, jbyteArray jkey, jint jkey_off, jint jkey_len, jbyteArray jval_byte_array, jint jval_len)
+jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_getIntoByteArraySetRegion(
+  JNIEnv *env, jclass, jbyteArray jkey, jint jkey_off, jint jkey_len, jbyteArray jval_byte_array, jint jval_len)
 {
   const char *key = GetKey(env, jkey, jkey_off, jkey_len);
   if (key == nullptr)
@@ -229,9 +257,9 @@ jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_getIntoByteArray
   delete[] key;
 
   size_t get_size = std::min(static_cast<size_t>(jval_len), cvalue.size());
-  env->SetByteArrayRegion(jval_byte_array, 0, get_size, const_cast<jbyte *>(reinterpret_cast<const jbyte *>(cvalue.c_str())));
+  env->SetByteArrayRegion(jval_byte_array, 0, static_cast<jsize>(get_size), const_cast<jbyte *>(reinterpret_cast<const jbyte *>(cvalue.c_str())));
 
-  return get_size;
+  return static_cast<jint>(get_size);
 }
 
 /*
@@ -275,7 +303,7 @@ jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_getIntoByteArray
   memcpy(array_elements, cvalue.c_str(), get_size);
   env->ReleaseByteArrayElements(jval_byte_array, array_elements, JNI_ABORT);
 
-  return get_size;
+  return static_cast<jint>(get_size);
 }
 
 /*
@@ -322,7 +350,7 @@ jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_getIntoByteArray
   memcpy(array_elements, cvalue.c_str(), get_size);
   env->ReleasePrimitiveArrayCritical(jval_byte_array, array_elements, JNI_ABORT);
 
-  return get_size;
+  return static_cast<jint>(get_size);
 }
 
 /*
@@ -372,9 +400,9 @@ jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_getIntoIndirectB
   }
 
   size_t get_size = std::min(static_cast<size_t>(jval_len), cvalue.size());
-  env->SetByteArrayRegion(buffer_internal_byte_array, 0, get_size, const_cast<jbyte *>(reinterpret_cast<const jbyte *>(cvalue.c_str())));
+  env->SetByteArrayRegion(buffer_internal_byte_array, 0, static_cast<jsize>(get_size), const_cast<jbyte *>(reinterpret_cast<const jbyte *>(cvalue.c_str())));
 
-  return get_size;
+  return static_cast<jint>(get_size);
 }
 
 /*
@@ -434,7 +462,7 @@ jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_getIntoIndirectB
   memcpy(array_elements, cvalue.c_str(), get_size);
   env->ReleaseByteArrayElements(buffer_internal_byte_array, array_elements, JNI_ABORT);
 
-  return get_size;
+  return static_cast<jint>(get_size);
 }
 
 /*
@@ -497,7 +525,7 @@ jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_getIntoIndirectB
   memcpy(array_elements, cvalue.c_str(), get_size);
   env->ReleasePrimitiveArrayCritical(buffer_internal_byte_array, array_elements, JNI_ABORT);
 
-  return get_size;
+  return static_cast<jint>(get_size);
 }
 
 /*

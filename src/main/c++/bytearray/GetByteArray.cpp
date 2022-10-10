@@ -29,11 +29,11 @@
 #include <cassert>
 #include <cstring>
 #include <iostream>
-#include <unordered_map>
 
 #include "com_evolvedbinary_jnibench_common_bytearray_GetByteArray.h"
 
 #include "Portal.h"
+#include "MockDB.h"
 
 static const std::string STR_10_B = "pkDHTxmMR1";
 static const std::string STR_50_B = "pkDHTxmMR18N2l9k88EmLgN7cCCTt9rWksb1fEBw397vi5Ug1Y";
@@ -46,7 +46,7 @@ static const std::string STR_64_KB = STR_32_KB + STR_32_KB;
 static const std::string STR_128_KB = STR_64_KB + STR_64_KB;
 static const std::string STR_256_KB = STR_128_KB + STR_128_KB;
 
-static const auto DB_READ_MOCK = std::unordered_map<std::string, std::string>{
+static auto DB_READ_MOCK = MockReadCache {
     {"testKeyWithReturnValueSize0000010Bytes", STR_10_B},
     {"testKeyWithReturnValueSize0000050Bytes", STR_50_B},
     {"testKeyWithReturnValueSize0000512Bytes", STR_512_B},
@@ -58,6 +58,19 @@ static const auto DB_READ_MOCK = std::unordered_map<std::string, std::string>{
     {"testKeyWithReturnValueSize0131072Bytes", STR_128_KB},
     {"testKeyWithReturnValueSize0262144Bytes", STR_256_KB}};
 
+MockReadCache *GetMockReadCache()
+{
+  return &DB_READ_MOCK;
+}
+
+const std::string &GetByteArrayInternal(const MockReadCache *cache, const char *key)
+{
+  std::string str(key, 38);
+
+  //std::cerr << std::endl << "Getting " << str << std::endl << std::endl;
+  return cache->at(str);
+}
+
 const std::string &GetByteArrayInternal(const char *key)
 {
   std::string str(key, 38);
@@ -65,16 +78,6 @@ const std::string &GetByteArrayInternal(const char *key)
   //std::cerr << std::endl << "Getting " << str << std::endl << std::endl;
   return DB_READ_MOCK.at(str);
 }
-
-struct WriteKey
-{
-  std::string key;
-  size_t length;
-
-  WriteKey(const std::string &key, size_t length) : key(key, 38), length(length)
-  {
-  }
-};
 
 bool operator==(const WriteKey &lhs, const WriteKey &rhs)
 {
