@@ -91,8 +91,6 @@ public class GetJNIBenchmark {
 
         JMHCaller caller;
 
-        long mockHandle;
-
         @Setup
         public void setup() {
             this.caller = JMHCaller.fromStack();
@@ -102,8 +100,6 @@ public class GetJNIBenchmark {
             keyBytes = keyBase.getBytes();
 
             readChecksum = AllocationCache.Checksum.valueOf(checksum);
-
-            mockHandle = GetPutJNI.createMockHandle();
         }
 
         @TearDown
@@ -125,10 +121,13 @@ public class GetJNIBenchmark {
         int valueSize;
         int cacheSize;
 
+        long mockHandle;
+
         @Setup
         public void setup(GetJNIBenchmarkState benchmarkState, Blackhole blackhole) {
             valueSize = benchmarkState.valueSize;
             cacheSize = benchmarkState.cacheMB * GetJNIBenchmarkState.MB;
+            mockHandle = GetPutJNI.createMockHandle();
 
             switch (benchmarkState.caller.benchmarkMethod) {
                 case "getIntoPooledNettyByteBuf":
@@ -246,7 +245,7 @@ public class GetJNIBenchmark {
     @Benchmark
     public void getFromMockHandleIntoByteArraySetRegion(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState, Blackhole blackhole) {
         byte[] array = threadState.byteArrayCache.acquire();
-        int size = GetPutJNI.getFromMockHandleIntoByteArraySetRegion(benchmarkState.mockHandle, benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, array, benchmarkState.valueSize);
+        int size = GetPutJNI.getFromMockHandleIntoByteArraySetRegion(threadState.mockHandle, benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, array, benchmarkState.valueSize);
         threadState.byteArrayCache.checksumBuffer(array);
         threadState.byteArrayCache.release(array);
     }
