@@ -197,7 +197,7 @@ public class GetJNIBenchmark {
         }
     }
 
-    //@Benchmark
+    @Benchmark
     public void buffersOnlyDirectByteBufferFromUnsafe(GetJNIThreadState threadState) {
         UnsafeBufferCache.UnsafeBuffer unsafeBuffer = threadState.unsafeBufferCache.acquire();
         threadState.unsafeBufferCache.release(unsafeBuffer);
@@ -212,7 +212,7 @@ public class GetJNIBenchmark {
         threadState.directByteBufferCache.release(byteBuffer);
     }
 
-    //@Benchmark
+    @Benchmark
     public void getIntoUnsafe(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState, Blackhole blackhole) {
         UnsafeBufferCache.UnsafeBuffer unsafeBuffer = threadState.unsafeBufferCache.acquire();
         int size = GetPutJNI.getIntoUnsafe(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, unsafeBuffer.handle, benchmarkState.valueSize);
@@ -220,7 +220,7 @@ public class GetJNIBenchmark {
         threadState.unsafeBufferCache.release(unsafeBuffer);
     }
 
-    //@Benchmark
+    @Benchmark
     public void getIntoPooledNettyByteBuf(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState, Blackhole blackhole) {
         ByteBuf byteBuf = threadState.pooledByteBufAllocator.directBuffer(benchmarkState.valueSize);
         byteBuf.readerIndex(0);
@@ -232,7 +232,7 @@ public class GetJNIBenchmark {
         byteBuf.release();
     }
 
-    //@Benchmark
+    @Benchmark
     public void getIntoNettyByteBuf(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState, Blackhole blackhole) {
         ByteBuf byteBuf = threadState.nettyByteBufCache.acquire();
         byteBuf.readerIndex(0);
@@ -278,7 +278,7 @@ public class GetJNIBenchmark {
     //TODO this can be done in as many different ways as supplying a byte[]
     //But why shouldn't we just expect the same performance as byte[] ?
     //Start with one instance (one that seems good in the byte[] case), and check for surprises...
-    //@Benchmark
+    @Benchmark
     public void getIntoIndirectByteBufferSetRegion(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState, Blackhole blackhole) {
         ByteBuffer byteBuffer = threadState.indirectByteBufferCache.acquire();
         byteBuffer.clear();
@@ -287,7 +287,7 @@ public class GetJNIBenchmark {
         threadState.indirectByteBufferCache.release(byteBuffer);
     }
 
-    //@Benchmark
+    @Benchmark
     public void getIntoIndirectByteBufferGetElements(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState, Blackhole blackhole) {
         ByteBuffer byteBuffer = threadState.indirectByteBufferCache.acquire();
         byteBuffer.clear();
@@ -296,7 +296,7 @@ public class GetJNIBenchmark {
         threadState.indirectByteBufferCache.release(byteBuffer);
     }
 
-    //@Benchmark
+    @Benchmark
     public void getIntoIndirectByteBufferGetCritical(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState, Blackhole blackhole) {
         ByteBuffer byteBuffer = threadState.indirectByteBufferCache.acquire();
         byteBuffer.clear();
