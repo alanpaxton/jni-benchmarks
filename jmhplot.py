@@ -268,13 +268,14 @@ def plot_result_set(indexKeys: Tuple, indexTuple: Tuple, resultSet: ResultSet, p
     plt.xlabel("X")
     plt.ylabel("t (ns)")
     plt.legend(loc='lower right')
-    plt.grid(b='True', which='both')
+    plt.grid(visible='True', which='both')
 
     name = f'fig_{"_".join([str(t) for t in indexTuple])}_{label}.png'
 
     if path.is_file():
-        path = path.parent()
+        path = path.parent
     fig.savefig(path.joinpath(name))
+    plt.close(fig=fig)
 
 
 alpha_pattern = re.compile(f'[A-Za-z0-9_\-+]')
