@@ -77,6 +77,14 @@
         },
         {
             "xaxisparam": {
+                "name": "valueSize",
+                "max": 4096
+            },
+            "include_patterns": ["SetRegion"],
+            "label": "setregsmall"
+        },
+        {
+            "xaxisparam": {
                 "name": "valueSize"
             },
             "include_patterns": ["SetRegion"],
