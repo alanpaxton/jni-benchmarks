@@ -32,6 +32,7 @@ from collections import namedtuple
 from json.decoder import JSONDecodeError
 import pathlib
 from typing import Dict, List, NewType, Sequence, Tuple
+import warnings
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -61,6 +62,9 @@ class RunnerError(Exception):
 
 def error(message: str):
     raise RunnerError(message)
+
+def warn(message: str):
+    warnings.warn(message)
 
 
 def uncomment(line: str) -> bool:
@@ -341,19 +345,23 @@ def process_some_plots(path: pathlib.Path, plot: Dict) -> None:
 
     dataframe = normalize_data_frame_from_path(path)
     if len(dataframe) == 0:
-        raise RunnerError(
+        warn(
             f'0 results were read from the file(s) at {path} ({path.absolute})')
 
     dataframe = filter_for_benchmarks(
         dataframe, include_benchmarks, exclude_benchmarks)
     if len(dataframe) == 0:
-        raise RunnerError(
+        warn(
             f'0 results after filtering benchmarks include: {include_benchmarks}, exclude: {exclude_benchmarks}')
 
     dataframe = filter_for_range(dataframe, xaxisparam)
     if len(dataframe) == 0:
-        raise RunnerError(
+        warn(
             f'0 results after filtering range {xaxisparam}')
+
+    if len(dataframe) == 0:
+        warn(f'No plot will be generated for {xaxisparam}')
+        return
 
     params: BMParams = split_params(
         extract_params(dataframe), primary_param_name)
