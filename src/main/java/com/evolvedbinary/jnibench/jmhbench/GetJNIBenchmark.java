@@ -312,7 +312,7 @@ public class GetJNIBenchmark {
     //TODO getReturnByteArrayGetElements
     //TODO getReturnByteArraySetRegion
 
-    //TODO env->NewDirectByteBuffer() - what aree the ownership rules ?
+    //TODO env->NewDirectByteBuffer() - what are the ownership rules ?
     //TODO track whether the byte[] copying/sharing methods we are using are doing copies
     //env->GetByteArrayElements(..., &is_copy)
 
