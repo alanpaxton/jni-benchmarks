@@ -213,6 +213,7 @@ jlong Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_createMockHandl
 {
   auto* mockHandle = new MockDB();
   mockHandle->mockReadCache = std::shared_ptr<MockReadCache>(GetMockReadCache());
+  mockHandle->weakMockReadCache = std::weak_ptr<MockReadCache>(mockHandle->mockReadCache);
   return reinterpret_cast<jlong>(mockHandle);
 }
 
@@ -231,6 +232,37 @@ jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_getFromMockHandl
     return kError;
   }
   std::string cvalue = GetByteArrayInternal(mockAPIHandle.mockReadCache.get(), key);
+  delete[] key;
+
+  size_t get_size = std::min(static_cast<size_t>(jval_len), cvalue.size());
+  env->SetByteArrayRegion(jval_byte_array, 0, static_cast<jsize>(get_size), const_cast<jbyte *>(reinterpret_cast<const jbyte *>(cvalue.c_str())));
+
+  return static_cast<jint>(get_size);
+}
+
+/*
+ * Class:     com_evolvedbinary_jnibench_common_getputjni_GetPutJNI
+ * Method:    getFromMockHandleMockCFIntoByteArraySetRegion
+ * Signature: (JJ[BII[BI)I
+ */
+jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_getFromMockHandleMockCFIntoByteArraySetRegion(
+  JNIEnv *env, jclass, jlong jhandle, jlong jhandle2, jbyteArray jkey, jint jkey_off, jint jkey_len, jbyteArray jval_byte_array, jint jval_len)
+{
+  const auto& mockAPIHandle = *reinterpret_cast<MockDB*>(jhandle);
+  const auto& mockAPIHandle2 = *reinterpret_cast<MockDB*>(jhandle2);
+  const char *key = GetKey(env, jkey, jkey_off, jkey_len);
+  if (key == nullptr)
+  {
+    return kError;
+  }
+  auto* ignore = mockAPIHandle.mockReadCache.get();
+  auto lockCache = mockAPIHandle2.weakMockReadCache.lock();
+  if (ignore != lockCache.get()) {
+    jclass iae_class = env->FindClass("/lang/java/IllegalArgumentException");
+        env->ThrowNew(iae_class,
+                      "Check in mock fetch from handle failed. That was not expected to happen.");
+  }
+  std::string cvalue = GetByteArrayInternal(lockCache.get(), key);
   delete[] key;
 
   size_t get_size = std::min(static_cast<size_t>(jval_len), cvalue.size());

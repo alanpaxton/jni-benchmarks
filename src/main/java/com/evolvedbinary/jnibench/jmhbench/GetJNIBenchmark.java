@@ -152,6 +152,7 @@ public class GetJNIBenchmark {
                     unsafeBufferCache.setup(valueSize, cacheSize, benchmarkState.cacheEntryOverhead, benchmarkState.readChecksum, blackhole);
                     break;
                 case "getFromMockHandleIntoByteArraySetRegion":
+                case "getFromMockHandleMockCFIntoByteArraySetRegion":
                 case "getIntoByteArraySetRegion":
                 case "getIntoByteArrayGetElements":
                 case "getIntoByteArrayCritical":
@@ -186,6 +187,7 @@ public class GetJNIBenchmark {
                     unsafeBufferCache.tearDown();
                     break;
                 case "getFromMockHandleIntoByteArraySetRegion":
+                case "getFromMockHandleMockCFIntoByteArraySetRegion":
                 case "getIntoByteArraySetRegion":
                 case "getIntoByteArrayGetElements":
                 case "getIntoByteArrayCritical":
@@ -246,6 +248,14 @@ public class GetJNIBenchmark {
     public void getFromMockHandleIntoByteArraySetRegion(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState, Blackhole blackhole) {
         byte[] array = threadState.byteArrayCache.acquire();
         int size = GetPutJNI.getFromMockHandleIntoByteArraySetRegion(threadState.mockHandle, benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, array, benchmarkState.valueSize);
+        threadState.byteArrayCache.checksumBuffer(array);
+        threadState.byteArrayCache.release(array);
+    }
+
+    @Benchmark
+    public void getFromMockHandleMockCFIntoByteArraySetRegion(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState, Blackhole blackhole) {
+        byte[] array = threadState.byteArrayCache.acquire();
+        int size = GetPutJNI.getFromMockHandleMockCFIntoByteArraySetRegion(threadState.mockHandle, threadState.mockHandle, benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, array, benchmarkState.valueSize);
         threadState.byteArrayCache.checksumBuffer(array);
         threadState.byteArrayCache.release(array);
     }

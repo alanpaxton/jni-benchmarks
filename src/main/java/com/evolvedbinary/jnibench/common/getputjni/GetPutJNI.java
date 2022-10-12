@@ -129,6 +129,15 @@ public class GetPutJNI {
             final byte[] value,
             final int valueLength);
 
+    public static native int getFromMockHandleMockCFIntoByteArraySetRegion(
+            final long mockDbHandle,
+            final long mockDbHandleForCF,
+            final byte[] key,
+            final int keyOffset,
+            final int keyLength,
+            final byte[] value,
+            final int valueLength);
+
     public static native int getIntoByteArraySetRegion(
             final byte[] key,
             final int keyOffset,
