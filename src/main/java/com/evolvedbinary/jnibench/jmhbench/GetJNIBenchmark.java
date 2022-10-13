@@ -122,12 +122,14 @@ public class GetJNIBenchmark {
         int cacheSize;
 
         long mockHandle;
+        long mockReadCache;
 
         @Setup
         public void setup(GetJNIBenchmarkState benchmarkState, Blackhole blackhole) {
             valueSize = benchmarkState.valueSize;
             cacheSize = benchmarkState.cacheMB * GetJNIBenchmarkState.MB;
             mockHandle = GetPutJNI.createMockHandle();
+            mockReadCache = GetPutJNI.getMockReadCache();
 
             switch (benchmarkState.caller.benchmarkMethod) {
                 case "getIntoPooledNettyByteBuf":
@@ -151,7 +153,8 @@ public class GetJNIBenchmark {
                 case "getIntoUnsafe":
                     unsafeBufferCache.setup(valueSize, cacheSize, benchmarkState.cacheEntryOverhead, benchmarkState.readChecksum, blackhole);
                     break;
-                case "getFromMockHandleIntoByteArraySetRegion":
+                case "getFromMockReadCacheIntoByteArraySetRegion":
+                case "getFromMockHandleMockDBIntoByteArraySetRegion":
                 case "getFromMockHandleMockCFIntoByteArraySetRegion":
                 case "getIntoByteArraySetRegion":
                 case "getIntoByteArrayGetElements":
@@ -186,7 +189,8 @@ public class GetJNIBenchmark {
                 case "getIntoUnsafe":
                     unsafeBufferCache.tearDown();
                     break;
-                case "getFromMockHandleIntoByteArraySetRegion":
+                case "getFromMockReadCacheIntoByteArraySetRegion":
+                case "getFromMockHandleMockDBIntoByteArraySetRegion":
                 case "getFromMockHandleMockCFIntoByteArraySetRegion":
                 case "getIntoByteArraySetRegion":
                 case "getIntoByteArrayGetElements":
@@ -245,9 +249,17 @@ public class GetJNIBenchmark {
     }
 
     @Benchmark
-    public void getFromMockHandleIntoByteArraySetRegion(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState, Blackhole blackhole) {
+    public void getFromMockReadCacheIntoByteArraySetRegion(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState, Blackhole blackhole) {
         byte[] array = threadState.byteArrayCache.acquire();
-        int size = GetPutJNI.getFromMockHandleIntoByteArraySetRegion(threadState.mockHandle, benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, array, benchmarkState.valueSize);
+        int size = GetPutJNI.getFromMockReadCacheIntoByteArraySetRegion(threadState.mockReadCache, benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, array, benchmarkState.valueSize);
+        threadState.byteArrayCache.checksumBuffer(array);
+        threadState.byteArrayCache.release(array);
+    }
+
+    @Benchmark
+    public void getFromMockHandleMockDBIntoByteArraySetRegion(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState, Blackhole blackhole) {
+        byte[] array = threadState.byteArrayCache.acquire();
+        int size = GetPutJNI.getFromMockHandleMockDBIntoByteArraySetRegion(threadState.mockHandle, benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, array, benchmarkState.valueSize);
         threadState.byteArrayCache.checksumBuffer(array);
         threadState.byteArrayCache.release(array);
     }

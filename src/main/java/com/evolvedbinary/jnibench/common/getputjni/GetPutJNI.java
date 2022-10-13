@@ -109,6 +109,8 @@ public class GetPutJNI {
 
     public static native long createMockHandle();
 
+    public static native long getMockReadCache();
+
     /**
      * Compare with #getIntoByteArraySetRegion
      * Extra cost is the dereference of the mock handle on each call.
@@ -121,7 +123,15 @@ public class GetPutJNI {
      * @param valueLength
      * @return
      */
-    public static native int getFromMockHandleIntoByteArraySetRegion(
+    public static native int getFromMockReadCacheIntoByteArraySetRegion(
+            final long mockReadCache,
+            final byte[] key,
+            final int keyOffset,
+            final int keyLength,
+            final byte[] value,
+            final int valueLength);
+
+    public static native int getFromMockHandleMockDBIntoByteArraySetRegion(
             final long mockDbHandle,
             final byte[] key,
             final int keyOffset,

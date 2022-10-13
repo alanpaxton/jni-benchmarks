@@ -219,10 +219,43 @@ jlong Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_createMockHandl
 
 /*
  * Class:     com_evolvedbinary_jnibench_common_getputjni_GetPutJNI
- * Method:    getFromMockHandleIntoByteArraySetRegion
+ * Method:    getMockReadCache
+ * Signature: ()J
+ */
+jlong Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_getMockReadCache(JNIEnv *, jclass)
+{
+  return reinterpret_cast<jlong>(GetMockReadCache());
+}
+
+/*
+ * Class:     com_evolvedbinary_jnibench_common_getputjni_GetPutJNI
+ * Method:    getFromMockReadCacheIntoByteArraySetRegion
  * Signature: (J[BII[BI)I
  */
-jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_getFromMockHandleIntoByteArraySetRegion(
+jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_getFromMockReadCacheIntoByteArraySetRegion(
+  JNIEnv *env, jclass, jlong jhandle, jbyteArray jkey, jint jkey_off, jint jkey_len, jbyteArray jval_byte_array, jint jval_len)
+{
+  auto* mockReadCache = reinterpret_cast<MockReadCache*>(jhandle);
+  const char *key = GetKey(env, jkey, jkey_off, jkey_len);
+  if (key == nullptr)
+  {
+    return kError;
+  }
+  std::string cvalue = GetByteArrayInternal(mockReadCache, key);
+  delete[] key;
+
+  size_t get_size = std::min(static_cast<size_t>(jval_len), cvalue.size());
+  env->SetByteArrayRegion(jval_byte_array, 0, static_cast<jsize>(get_size), const_cast<jbyte *>(reinterpret_cast<const jbyte *>(cvalue.c_str())));
+
+  return static_cast<jint>(get_size);
+}
+
+/*
+ * Class:     com_evolvedbinary_jnibench_common_getputjni_GetPutJNI
+ * Method:    getFromMockHandleMockDBIntoByteArraySetRegion
+ * Signature: (J[BII[BI)I
+ */
+jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_getFromMockHandleMockDBIntoByteArraySetRegion(
   JNIEnv *env, jclass, jlong jhandle, jbyteArray jkey, jint jkey_off, jint jkey_len, jbyteArray jval_byte_array, jint jval_len)
 {
   const auto& mockAPIHandle = *reinterpret_cast<MockDB*>(jhandle);
